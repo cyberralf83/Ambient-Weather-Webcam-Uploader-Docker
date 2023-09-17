@@ -1,0 +1,11 @@
+version: '3.4'
+
+services:
+  ams-cam-upload:
+    image: ams-cam-upload
+    environment:
+    - "INPUT_IP_ADDRESS=http://192.168.1.120/action/snap?cam=0&user=admin&pwd=12345"
+    - "SERVER=ftp2.ambientweather.net"
+    - "PORT=21"
+    - "USERNAME=C45BBE5EED60"
+    - "PASSWORD=ad0aa855"
