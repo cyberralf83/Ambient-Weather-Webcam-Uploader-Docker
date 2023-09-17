@@ -1,2 +1,3 @@
 # Ambient Weather Webcam Uploader - Docker
  A Docker Container
+ Run Docker Compose 
