@@ -1,0 +1,22 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-push-docker:
+    uses: .\/.github\/workflows\/docker-build-push.yml
+    with:
+      image-name: Ambient-Weather-Webcam-Uploader
+      image-tag: ${{ github.ref_name == 'main' && 'latest' || github.ref_name }}
+      dockerfile-path: './Dockerfile'
+      build-context: './'
+      platforms: 'linux/amd64,linux/arm64'
+    secrets:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
