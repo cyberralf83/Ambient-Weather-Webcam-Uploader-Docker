@@ -10,12 +10,12 @@ on:
 
 jobs:
   build-and-push-docker:
-    uses: .\/.github\/workflows\/docker-build-push.yml
+    uses: ./.github/workflows/docker-build-push.yml@main
     with:
-      image-name: Ambient-Weather-Webcam-Uploader
+      image-name: ${{ vars.DOCKERHUB_USERNAME }}/my-app
       image-tag: ${{ github.ref_name == 'main' && 'latest' || github.ref_name }}
       dockerfile-path: './Dockerfile'
-      build-context: './'
+      build-context: '.'
       platforms: 'linux/amd64,linux/arm64'
     secrets:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
