@@ -7,12 +7,13 @@ on:
       - develop
     tags:
       - 'v*'
+  workflow_dispatch:
 
 jobs:
   build-and-push-docker:
     uses: cyberralf83/Ambient-Weather-Webcam-Uploader-Docker/.github/workflows/docker-build-push.yml@main
     with:
-      image-name: cyberralf83/Ambient-Weather-Webcam-Uploader-Docker
+      image-name: ralf83/Ambient-Weather-Webcam-Uploader-Docker
       image-tag: ${{ github.ref_name == 'main' && 'latest' || github.ref_name }}
       dockerfile-path: './Dockerfile'
       build-context: './'
