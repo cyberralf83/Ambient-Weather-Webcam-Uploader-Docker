@@ -1,0 +1,11 @@
+version: '3.4'
+
+services:
+  ams-cam-upload:
+    image: ams-cam-upload
+    environment:
+    - "INPUT_IP_ADDRESS=$INPUT_IP"
+    - "SERVER=ftp2.ambientweather.net"
+    - "PORT=21"
+    - "USERNAME=$USERNAME"
+    - "PASSWORD=$PASSWORD"
