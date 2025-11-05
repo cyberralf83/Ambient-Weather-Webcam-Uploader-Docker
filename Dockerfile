@@ -4,19 +4,24 @@ FROM alpine:latest
 # Install required packages
 RUN apk --no-cache add wget \
                         curl \
-                        busybox-extras                         
+                        busybox-extras \
+                        file \
+                        tzdata
 
+# Create necessary directories
+RUN mkdir -p /home/root/archive /var/log
 
-# Add the ams-cam-upload.sh script to the image
-RUN mkdir /home/root
+# Copy scripts to the image
 COPY ams-cam-upload.sh /usr/local/bin/ams-cam-upload.sh
-
-RUN ls -al /
-# Add the entrypoint script
 COPY entrypoint.sh /entrypoint.sh
+COPY healthcheck.sh /usr/local/bin/healthcheck.sh
 
 # Make scripts executable
-RUN chmod +x /usr/local/bin/ams-cam-upload.sh /entrypoint.sh
+RUN chmod +x /usr/local/bin/ams-cam-upload.sh /entrypoint.sh /usr/local/bin/healthcheck.sh
+
+# Health check configuration
+HEALTHCHECK --interval=2m --timeout=10s --start-period=30s --retries=3 \
+    CMD /usr/local/bin/healthcheck.sh
 
 # Run the entrypoint script
 ENTRYPOINT ["/entrypoint.sh"]
