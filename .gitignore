@@ -1,0 +1,28 @@
+# Environment files with credentials
+.env
+
+# Data directories
+data/
+*.jpg
+*.jpeg
+*.png
+
+# Log files
+*.log
+
+# Docker volumes
+archive/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp

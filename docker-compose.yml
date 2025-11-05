@@ -3,9 +3,34 @@ version: '3.4'
 services:
   ams-cam-upload:
     image: ams-cam-upload
+    container_name: ams-cam-upload
+    restart: unless-stopped
     environment:
-    - "INPUT_IP_ADDRESS=$INPUT_IP"
-    - "SERVER=ftp2.ambientweather.net"
-    - "PORT=21"
-    - "USERNAME=$USERNAME"
-    - "PASSWORD=$PASSWORD"
+      # Required settings
+      - "INPUT_IP_ADDRESS=${INPUT_IP}"
+      - "SERVER=${SERVER:-ftp2.ambientweather.net}"
+      - "PORT=${PORT:-21}"
+      - "USERNAME=${USERNAME}"
+      - "PASSWORD=${PASSWORD}"
+
+      # Optional settings with defaults
+      - "CRON_SCHEDULE=${CRON_SCHEDULE:-*/2 * * * *}"  # Default: every 2 minutes
+      - "MAX_RETRIES=${MAX_RETRIES:-3}"                # Default: 3 retry attempts
+      - "RETRY_DELAY=${RETRY_DELAY:-5}"                # Default: 5 seconds between retries
+      - "TIMEOUT=${TIMEOUT:-30}"                       # Default: 30 second timeout
+      - "MIN_IMAGE_SIZE=${MIN_IMAGE_SIZE:-1024}"       # Default: 1KB minimum image size
+      - "KEEP_IMAGES=${KEEP_IMAGES:-5}"                # Default: keep last 5 images
+      - "HEALTHCHECK_MAX_AGE=${HEALTHCHECK_MAX_AGE:-300}"  # Default: 5 minutes
+      - "TZ=${TZ:-UTC}"                                # Default: UTC timezone
+
+    volumes:
+      # Persist archived images (optional)
+      - "./data/archive:/home/root/archive"
+      # Persist logs (optional)
+      - "./data/logs:/var/log"
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
