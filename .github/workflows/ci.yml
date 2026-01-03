@@ -1,0 +1,22 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-and-push-docker:
+    uses: cyberralf83/My-Github-Actions-Workflows/.github/workflows/docker-build-push.yml@main
+    with:
+      image-name: ralf83/ambient-weather-webcam-uploader-docker
+      docker-username: 'ralf83'
+      dockerfile-path: './Dockerfile'
+      context: '.'
+      platforms: 'linux/amd64,linux/arm64'
+    secrets:
+      docker-token: ${{ secrets.DOCKER_TOKEN }}
