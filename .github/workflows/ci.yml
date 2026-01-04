@@ -11,16 +11,30 @@ on:
 
 jobs:
   build-and-push-docker:
-    permissions:
-      contents: write      # Required for auto-versioning (creating Git tags)
-      id-token: write      # Required for attestations (public repos only)
-      attestations: write  # Required for build provenance (public repos only)
-    uses: cyberralf83/My-Github-Actions-Workflows/.github/workflows/docker-build-push.yml@main
-    with:
-      image-name: ambient-weather-webcam-uploader-docker
-      docker-username: 'ralf83'
-      dockerfile-path: './Dockerfile'
-      context: '.'
-      platforms: 'linux/amd64,linux/arm64'
-    secrets:
-      docker-token: ${{ secrets.DOCKER_TOKEN }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ralf83
+          password: ${{ secrets.DOCKER_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ralf83/ambient-weather-webcam-uploader-docker:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
