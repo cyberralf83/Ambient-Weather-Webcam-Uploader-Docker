@@ -11,6 +11,10 @@ on:
 
 jobs:
   build-and-push-docker:
+    permissions:
+      contents: write      # Required for auto-versioning (creating Git tags)
+      id-token: write      # Required for attestations
+      attestations: write  # Required for build provenance
     uses: cyberralf83/My-Github-Actions-Workflows/.github/workflows/docker-build-push.yml@main
     with:
       image-name: ralf83/ambient-weather-webcam-uploader-docker
