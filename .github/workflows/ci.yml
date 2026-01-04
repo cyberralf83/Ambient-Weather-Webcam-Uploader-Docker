@@ -17,7 +17,7 @@ jobs:
       attestations: write  # Required for build provenance
     uses: cyberralf83/My-Github-Actions-Workflows/.github/workflows/docker-build-push.yml@main
     with:
-      image-name: ralf83/ambient-weather-webcam-uploader-docker
+      image-name: ambient-weather-webcam-uploader-docker
       docker-username: 'ralf83'
       dockerfile-path: './Dockerfile'
       context: '.'
