@@ -6,7 +6,8 @@ RUN apk --no-cache add wget \
                         curl \
                         busybox-extras \
                         file \
-                        tzdata
+                        tzdata \
+                        logrotate
 
 # Create necessary directories
 RUN mkdir -p /home/root/archive /var/log
@@ -15,6 +16,7 @@ RUN mkdir -p /home/root/archive /var/log
 COPY ams-cam-upload.sh /usr/local/bin/ams-cam-upload.sh
 COPY entrypoint.sh /entrypoint.sh
 COPY healthcheck.sh /usr/local/bin/healthcheck.sh
+COPY logrotate.conf /etc/logrotate.d/ams-cam-upload
 
 # Make scripts executable
 RUN chmod +x /usr/local/bin/ams-cam-upload.sh /entrypoint.sh /usr/local/bin/healthcheck.sh

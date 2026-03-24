@@ -9,6 +9,13 @@ MIN_IMAGE_SIZE=${MIN_IMAGE_SIZE:-1024}  # Minimum valid image size in bytes
 TIMEOUT=${TIMEOUT:-30}
 KEEP_IMAGES=${KEEP_IMAGES:-5}  # Number of images to keep for history
 
+# Track temp files for cleanup on unexpected exit
+NETRC_FILE=""
+cleanup() {
+    [ -n "$NETRC_FILE" ] && rm -f "$NETRC_FILE"
+}
+trap cleanup EXIT INT TERM
+
 # Logging function
 log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1"
@@ -84,14 +91,24 @@ upload_image() {
     while [ $attempt -le $MAX_RETRIES ]; do
         log "Uploading image to $SERVER:$PORT (attempt $attempt/$MAX_RETRIES)"
 
+        # Use .netrc to avoid exposing credentials in process list
+        NETRC_FILE=$(mktemp) || {
+            log_error "Failed to create temporary .netrc file"
+            return 1
+        }
+        printf "machine %s login %s password %s\n" "$SERVER" "$USERNAME" "$PASSWORD" > "$NETRC_FILE"
+        chmod 600 "$NETRC_FILE"
+
         if curl -T "$IMAGE_PATH" \
-            -u "$USERNAME:$PASSWORD" \
+            --netrc-file "$NETRC_FILE" \
             "ftp://$SERVER:$PORT/" \
             --connect-timeout $TIMEOUT \
             --max-time $((TIMEOUT * 2)) \
             --silent \
             --show-error \
             --ftp-create-dirs; then
+            rm -f "$NETRC_FILE"
+            NETRC_FILE=""
 
             log "Successfully uploaded image to Ambient Weather"
 
@@ -102,6 +119,8 @@ upload_image() {
 
             return 0
         else
+            rm -f "$NETRC_FILE"
+            NETRC_FILE=""
             log_error "Upload failed"
         fi
 

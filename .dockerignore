@@ -1,0 +1,16 @@
+.git/
+.github/
+.env
+.gitignore
+.gitattributes
+.dockerignore
+.DS_Store
+README.md
+example.env
+setup.sh
+setup-docker-workflows.sh
+variables.sh
+docker-compose.yml
+data/
+*.md
+*.log

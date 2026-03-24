@@ -32,7 +32,7 @@ A robust Docker container that automatically downloads snapshots from your IP we
 
 2. Create a `.env` file with your configuration:
    ```bash
-   cp .env.example .env
+   cp example.env .env
    ```
 
 3. Edit `.env` with your settings:
@@ -45,12 +45,12 @@ A robust Docker container that automatically downloads snapshots from your IP we
 
 4. Build and run the container:
    ```bash
-   docker-compose up -d
+   docker compose up -d --build
    ```
 
 5. Check the logs:
    ```bash
-   docker-compose logs -f
+   docker compose logs -f
    ```
 
 ## Configuration
@@ -59,7 +59,7 @@ A robust Docker container that automatically downloads snapshots from your IP we
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `INPUT_IP_ADDRESS` | URL to your webcam snapshot | `http://192.168.1.100/snapshot.jpg` |
+| `INPUT_IP` | URL to your webcam snapshot (mapped to `INPUT_IP_ADDRESS` in container) | `http://192.168.1.100/snapshot.jpg` |
 | `USERNAME` | Ambient Weather username | `your_username` |
 | `PASSWORD` | Ambient Weather password | `your_password` |
 
@@ -96,16 +96,16 @@ docker build -t ams-cam-upload .
 
 ```bash
 # Start the container
-docker-compose up -d
+docker compose up -d
 
 # View logs
-docker-compose logs -f
+docker compose logs -f
 
 # Stop the container
-docker-compose down
+docker compose down
 
 # Restart the container
-docker-compose restart
+docker compose restart
 ```
 
 ## Running with Docker CLI
@@ -142,7 +142,7 @@ docker inspect --format='{{.State.Health.Status}}' ams-cam-upload
 
 ```bash
 # Docker Compose
-docker-compose logs -f
+docker compose logs -f
 
 # Docker CLI
 docker logs -f ams-cam-upload
@@ -153,14 +153,14 @@ tail -f ./data/logs/ams-cam-upload.log
 
 ### Archived Images
 
-Uploaded images are automatically archived with timestamps in `/home/root/archive` inside the container. When using the provided docker-compose configuration, these are persisted to `./data/archive` on your host.
+Uploaded images are automatically archived with timestamps in `/home/root/archive` inside the container. When using the provided docker compose configuration, these are persisted to `./data/archive` on your host.
 
 ## Troubleshooting
 
 ### Common Issues
 
 1. **Container not starting**
-   - Check logs: `docker-compose logs`
+   - Check logs: `docker compose logs`
    - Verify environment variables are set correctly
    - Ensure webcam URL is accessible
 
@@ -184,7 +184,7 @@ Uploaded images are automatically archived with timestamps in `/home/root/archiv
 
 To see detailed execution:
 ```bash
-docker-compose logs -f
+docker compose logs -f
 ```
 
 ### Manual Testing
@@ -209,7 +209,7 @@ if wget "$INPUT_IP_ADDRESS" \
 
 ### Persistent Storage
 
-The docker-compose configuration includes volumes for:
+The docker compose configuration includes volumes for:
 - **Archived images**: `./data/archive`
 - **Logs**: `./data/logs`
 

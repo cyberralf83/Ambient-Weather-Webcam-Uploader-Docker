@@ -1,10 +1,16 @@
-version: '3.4'
-
 services:
   ams-cam-upload:
+    build: .
     image: ams-cam-upload
     container_name: ams-cam-upload
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - SETGID
+      - SETUID
     environment:
       # Required settings
       - "INPUT_IP_ADDRESS=${INPUT_IP}"
