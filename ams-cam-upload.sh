@@ -8,11 +8,15 @@ IMAGE_PATH="/home/root/image.jpg"
 MIN_IMAGE_SIZE=${MIN_IMAGE_SIZE:-1024}  # Minimum valid image size in bytes
 TIMEOUT=${TIMEOUT:-30}
 KEEP_IMAGES=${KEEP_IMAGES:-5}  # Number of images to keep for history
+IMAGE_RESIZE=${IMAGE_RESIZE:-}    # Optional: max dimensions (e.g., 1920x1080)
+IMAGE_QUALITY=${IMAGE_QUALITY:-}  # Optional: JPEG quality 1-100
 
 # Track temp files for cleanup on unexpected exit
 NETRC_FILE=""
+PROCESS_TEMP_FILE=""
 cleanup() {
-    [ -n "$NETRC_FILE" ] && rm -f "$NETRC_FILE"
+    [ -n "$NETRC_FILE" ] && rm -f "$NETRC_FILE" || true
+    [ -n "$PROCESS_TEMP_FILE" ] && rm -f "$PROCESS_TEMP_FILE" || true
 }
 trap cleanup EXIT INT TERM
 
@@ -84,6 +88,55 @@ download_image() {
     return 1
 }
 
+# Process image (resize and/or quality adjustment)
+# Non-fatal: uploads original if processing fails
+process_image() {
+    # Skip if neither option is set
+    [ -z "$IMAGE_RESIZE" ] && [ -z "$IMAGE_QUALITY" ] && return 0
+
+    # Detect ImageMagick binary (IM7 uses magick, IM6 uses convert)
+    local magick_bin=""
+    if command -v magick > /dev/null 2>&1; then
+        magick_bin="magick"
+    elif command -v convert > /dev/null 2>&1; then
+        magick_bin="convert"
+    else
+        log_error "ImageMagick not found, skipping image processing"
+        return 0
+    fi
+
+    local original_size
+    original_size=$(stat -c%s "$IMAGE_PATH" 2>/dev/null || echo "unknown")
+
+    log "Processing image: resize=${IMAGE_RESIZE:-unchanged} quality=${IMAGE_QUALITY:-unchanged}"
+
+    # Write to temp file then atomic mv (never process in-place)
+    PROCESS_TEMP_FILE="${IMAGE_PATH}.processing"
+
+    # Build command with properly quoted args to avoid shell > redirect issue
+    if [ -n "$IMAGE_RESIZE" ] && [ -n "$IMAGE_QUALITY" ]; then
+        "$magick_bin" "$IMAGE_PATH" -resize "${IMAGE_RESIZE}>" -quality "$IMAGE_QUALITY" "$PROCESS_TEMP_FILE"
+    elif [ -n "$IMAGE_RESIZE" ]; then
+        "$magick_bin" "$IMAGE_PATH" -resize "${IMAGE_RESIZE}>" "$PROCESS_TEMP_FILE"
+    else
+        "$magick_bin" "$IMAGE_PATH" -quality "$IMAGE_QUALITY" "$PROCESS_TEMP_FILE"
+    fi
+
+    # Validate processed output before replacing original
+    local new_size
+    new_size=$(stat -c%s "$PROCESS_TEMP_FILE" 2>/dev/null || echo 0)
+    if [ "$new_size" -lt "$MIN_IMAGE_SIZE" ]; then
+        rm -f "$PROCESS_TEMP_FILE"
+        PROCESS_TEMP_FILE=""
+        log_error "Processed image too small (${new_size} bytes), uploading original"
+        return 0
+    fi
+
+    mv "$PROCESS_TEMP_FILE" "$IMAGE_PATH"
+    PROCESS_TEMP_FILE=""
+    log "Image processed: ${original_size} -> ${new_size} bytes"
+}
+
 # Upload image with retry logic
 upload_image() {
     local attempt=1
@@ -149,6 +202,9 @@ if ! download_image; then
     log_error "Script failed: Could not download image"
     exit 1
 fi
+
+# Process image (resize/quality) if configured — non-fatal
+process_image || true
 
 # Upload image
 if ! upload_image; then

@@ -77,6 +77,25 @@ A robust Docker container that automatically downloads snapshots from your IP we
 | `KEEP_IMAGES` | `5` | Number of archived images to keep |
 | `HEALTHCHECK_MAX_AGE` | `300` | Max age of image for health check (seconds) |
 | `TZ` | `UTC` | Timezone (e.g., `America/New_York`) |
+| `IMAGE_RESIZE` | _(disabled)_ | Max dimensions e.g., `1920x1080` (shrink only) |
+| `IMAGE_QUALITY` | _(disabled)_ | JPEG quality 1-100 (e.g., `85`) |
+
+### Image Processing
+
+Optionally resize and/or compress images before uploading. Both settings are disabled by default — if neither is set, images are uploaded as-is.
+
+```env
+# Resize to max 1920x1080 (preserves aspect ratio, never enlarges)
+IMAGE_RESIZE=1920x1080
+
+# Set JPEG quality to 85%
+IMAGE_QUALITY=85
+```
+
+You can use either setting independently:
+- `IMAGE_RESIZE` only — resizes but preserves original JPEG quality
+- `IMAGE_QUALITY` only — compresses without resizing
+- Both — resizes first, then compresses
 
 ### Cron Schedule Examples
 

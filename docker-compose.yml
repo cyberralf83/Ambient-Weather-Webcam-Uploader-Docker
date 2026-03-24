@@ -29,6 +29,10 @@ services:
       - "HEALTHCHECK_MAX_AGE=${HEALTHCHECK_MAX_AGE:-300}"  # Default: 5 minutes
       - "TZ=${TZ:-UTC}"                                # Default: UTC timezone
 
+      # Image processing (optional, disabled if unset)
+      - "IMAGE_RESIZE=${IMAGE_RESIZE:-}"               # Max dimensions, e.g., 1920x1080
+      - "IMAGE_QUALITY=${IMAGE_QUALITY:-}"              # JPEG quality 1-100, e.g., 85
+
     volumes:
       # Persist archived images (optional)
       - "./data/archive:/home/root/archive"

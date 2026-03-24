@@ -44,11 +44,27 @@ if echo "$SERVER" | grep -qE '[^a-zA-Z0-9._-]'; then
     exit 1
 fi
 
+# Validate optional IMAGE_RESIZE format (e.g., 1920x1080)
+if [ -n "$IMAGE_RESIZE" ]; then
+    if ! echo "$IMAGE_RESIZE" | grep -qE '^[0-9]+x[0-9]+$'; then
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] FATAL: IMAGE_RESIZE must be in WIDTHxHEIGHT format (e.g., 1920x1080)"
+        exit 1
+    fi
+fi
+
+# Validate optional IMAGE_QUALITY range (1-100)
+if [ -n "$IMAGE_QUALITY" ]; then
+    if ! echo "$IMAGE_QUALITY" | grep -qE '^[0-9]+$' || [ "$IMAGE_QUALITY" -lt 1 ] || [ "$IMAGE_QUALITY" -gt 100 ]; then
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] FATAL: IMAGE_QUALITY must be a number between 1 and 100"
+        exit 1
+    fi
+fi
+
 # Export environment variables so cron jobs can access them
 # Quote values to handle passwords/URLs with special characters
 ENV_FILE="/etc/environment"
 install -m 600 /dev/null "$ENV_FILE"
-env | grep -E '^(INPUT_IP_ADDRESS|SERVER|PORT|USERNAME|PASSWORD|MAX_RETRIES|RETRY_DELAY|TIMEOUT|MIN_IMAGE_SIZE|KEEP_IMAGES|HEALTHCHECK_MAX_AGE|TZ)=' | \
+env | grep -E '^(INPUT_IP_ADDRESS|SERVER|PORT|USERNAME|PASSWORD|MAX_RETRIES|RETRY_DELAY|TIMEOUT|MIN_IMAGE_SIZE|KEEP_IMAGES|HEALTHCHECK_MAX_AGE|TZ|IMAGE_RESIZE|IMAGE_QUALITY)=' | \
   while IFS='=' read -r key value; do
     printf "export %s='%s'\n" "$key" "$(echo "$value" | sed "s/'/'\\\\''/g")"
   done > "$ENV_FILE"

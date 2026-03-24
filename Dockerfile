@@ -7,7 +7,9 @@ RUN apk --no-cache add wget \
                         busybox-extras \
                         file \
                         tzdata \
-                        logrotate
+                        logrotate \
+                        imagemagick \
+                        imagemagick-jpeg
 
 # Create necessary directories
 RUN mkdir -p /home/root/archive /var/log
