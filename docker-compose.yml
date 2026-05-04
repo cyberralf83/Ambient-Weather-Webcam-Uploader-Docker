@@ -33,6 +33,16 @@ services:
       - "IMAGE_RESIZE=${IMAGE_RESIZE:-}"               # Max dimensions, e.g., 1920x1080
       - "IMAGE_QUALITY=${IMAGE_QUALITY:-}"              # JPEG quality 1-100, e.g., 85
 
+      # Status web page (busybox httpd) — set STATUS_ENABLED=false to disable
+      - "STATUS_ENABLED=${STATUS_ENABLED:-true}"
+      - "STATUS_PORT=${STATUS_PORT:-8080}"
+
+    ports:
+      # Status page port. Always published — if STATUS_ENABLED=false, comment
+      # this line out as well, otherwise the port is open on the host with
+      # nothing listening inside the container.
+      - "${STATUS_PORT:-8080}:${STATUS_PORT:-8080}"
+
     volumes:
       # Persist archived images (optional)
       - "./data/archive:/home/root/archive"

@@ -60,11 +60,19 @@ if [ -n "$IMAGE_QUALITY" ]; then
     fi
 fi
 
+# Validate optional STATUS_PORT (1-65535)
+if [ -n "$STATUS_PORT" ]; then
+    if ! echo "$STATUS_PORT" | grep -qE '^[0-9]+$' || [ "$STATUS_PORT" -lt 1 ] || [ "$STATUS_PORT" -gt 65535 ]; then
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] FATAL: STATUS_PORT must be a number between 1 and 65535"
+        exit 1
+    fi
+fi
+
 # Export environment variables so cron jobs can access them
 # Quote values to handle passwords/URLs with special characters
 ENV_FILE="/etc/environment"
 install -m 600 /dev/null "$ENV_FILE"
-env | grep -E '^(INPUT_IP_ADDRESS|SERVER|PORT|USERNAME|PASSWORD|MAX_RETRIES|RETRY_DELAY|TIMEOUT|MIN_IMAGE_SIZE|KEEP_IMAGES|HEALTHCHECK_MAX_AGE|TZ|IMAGE_RESIZE|IMAGE_QUALITY)=' | \
+env | grep -E '^(INPUT_IP_ADDRESS|SERVER|PORT|USERNAME|PASSWORD|MAX_RETRIES|RETRY_DELAY|TIMEOUT|MIN_IMAGE_SIZE|KEEP_IMAGES|HEALTHCHECK_MAX_AGE|TZ|IMAGE_RESIZE|IMAGE_QUALITY|STATUS_ENABLED|STATUS_PORT|CRON_SCHEDULE)=' | \
   while IFS='=' read -r key value; do
     printf "export %s='%s'\n" "$key" "$(echo "$value" | sed "s/'/'\\\\''/g")"
   done > "$ENV_FILE"
@@ -72,6 +80,51 @@ env | grep -E '^(INPUT_IP_ADDRESS|SERVER|PORT|USERNAME|PASSWORD|MAX_RETRIES|RETR
 if [ ! -s "$ENV_FILE" ]; then
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] FATAL: Failed to write environment to $ENV_FILE"
     exit 1
+fi
+
+# Start status web server (busybox httpd) — opt out with STATUS_ENABLED=false
+if [ "${STATUS_ENABLED:-true}" = "true" ]; then
+    mkdir -p /var/www
+    # Symlink the working image so httpd serves the latest snapshot
+    ln -sf /home/root/image.jpg /var/www/image.jpg
+    # Placeholder until first run renders the real page (uses the same brand stylesheet)
+    cat > /var/www/index.html <<'PLACEHOLDER'
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="refresh" content="5">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mj/cam · starting up</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="status.css">
+</head>
+<body>
+<header class="hero">
+  <div class="hero-inner">
+    <div class="mark-row">
+      <div class="mark-lockup">mj<span class="slash">/</span><span class="name">cam</span></div>
+      <span class="live-dot">starting</span>
+    </div>
+    <div class="eyebrow">status &middot; warming up</div>
+    <h1>Snapshots, on schedule.</h1>
+    <p class="tagline">Waiting for the first upload to complete&hellip;</p>
+  </div>
+</header>
+<main class="shell">
+  <p class="meta-line">This page will refresh in a few seconds.</p>
+</main>
+</body>
+</html>
+PLACEHOLDER
+    STATUS_HTTPD_PORT="${STATUS_PORT:-8080}"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting status httpd on port $STATUS_HTTPD_PORT"
+    # busybox httpd daemonizes by default; a non-zero exit here means the launch
+    # itself failed (e.g. port already bound). The upload pipeline still works,
+    # so log a warning rather than aborting the container.
+    if ! busybox httpd -p "$STATUS_HTTPD_PORT" -h /var/www; then
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] WARNING: status httpd failed to start (port $STATUS_HTTPD_PORT). Status page will be unavailable; uploads continue."
+    fi
 fi
 
 # Run the script once immediately

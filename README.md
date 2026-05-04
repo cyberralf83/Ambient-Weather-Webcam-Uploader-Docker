@@ -79,6 +79,8 @@ A robust Docker container that automatically downloads snapshots from your IP we
 | `TZ` | `UTC` | Timezone (e.g., `America/New_York`) |
 | `IMAGE_RESIZE` | _(disabled)_ | Max dimensions e.g., `1920x1080` (shrink only) |
 | `IMAGE_QUALITY` | _(disabled)_ | JPEG quality 1-100 (e.g., `85`) |
+| `STATUS_ENABLED` | `true` | Enable the built-in status web page (set `false` to disable) |
+| `STATUS_PORT` | `8080` | Port the status page is served on |
 
 ### Image Processing
 
@@ -141,6 +143,20 @@ docker run -d \
   -v ./data/logs:/var/log \
   ams-cam-upload
 ```
+
+## Status Web Page
+
+The container ships a tiny built-in status page (BusyBox `httpd`) showing the last upload result, success/failure counters, the latest snapshot, and recent log lines. It auto-refreshes every 30 seconds.
+
+Once the container is running, browse to:
+
+```
+http://<docker-host>:8080/
+```
+
+Disable with `STATUS_ENABLED=false`, or move it to another port via `STATUS_PORT`. Counters reset on container restart. The page has no authentication — only expose `STATUS_PORT` on a trusted network, or front it with a reverse proxy if you need TLS or auth.
+
+The styling lives in [`static/status.css`](static/status.css) and follows michael's brand (light-mode primary, Inter + JetBrains Mono, Pine + Signal + Ember anchors with a Pine→Cyan "Aqua" gradient). To restyle, edit `static/status.css` and rebuild — the rendered HTML in `ams-cam-upload.sh` only emits class names, not inline styles.
 
 ## Monitoring
 
@@ -217,7 +233,7 @@ docker exec -it ams-cam-upload /usr/local/bin/ams-cam-upload.sh
 
 ### Custom Webcam Authentication
 
-If your webcam requires custom headers or cookies, modify `ams-cam-upload.sh:37-39` to add additional wget options:
+If your webcam requires custom headers or cookies, edit the `wget` call in `download_image()` inside `ams-cam-upload.sh` to add additional wget options:
 
 ```bash
 if wget "$INPUT_IP_ADDRESS" \
