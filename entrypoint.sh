@@ -136,10 +136,13 @@ if [ "${STATUS_ENABLED:-true}" = "true" ]; then
 PLACEHOLDER
     STATUS_HTTPD_PORT="${STATUS_PORT:-8080}"
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting status httpd on port $STATUS_HTTPD_PORT"
-    # busybox httpd daemonizes by default; a non-zero exit here means the launch
-    # itself failed (e.g. port already bound). The upload pipeline still works,
-    # so log a warning rather than aborting the container.
-    if ! busybox httpd -p "$STATUS_HTTPD_PORT" -h /var/www; then
+    # On Alpine, the httpd applet ships as a separate /usr/sbin/httpd binary
+    # in the busybox-extras package — invoking it via `busybox httpd` fails
+    # because the main busybox binary doesn't include the applet. Call the
+    # standalone binary instead. It daemonizes by default; a non-zero exit
+    # means launch itself failed (e.g. port already bound). The upload
+    # pipeline still works, so log a warning rather than aborting.
+    if ! httpd -p "$STATUS_HTTPD_PORT" -h /var/www; then
         echo "[$(date '+%Y-%m-%d %H:%M:%S')] WARNING: status httpd failed to start (port $STATUS_HTTPD_PORT). Status page will be unavailable; uploads continue."
     fi
 fi
