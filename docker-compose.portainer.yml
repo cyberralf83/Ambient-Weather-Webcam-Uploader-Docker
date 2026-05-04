@@ -1,0 +1,55 @@
+# Portainer / Docker Hub deployment compose.
+#
+# This file pulls the prebuilt image from Docker Hub instead of building
+# locally. Use it when deploying via Portainer (PiBridge → Stacks) or any
+# host where you want to run the published image, not the source.
+#
+# For local dev (build from source), use docker-compose.yml instead.
+#
+# Required variables come from .env (or Portainer's Environment variables
+# panel). See .env in this repo for the template.
+
+services:
+  ams-cam-upload:
+    image: ralf83/ambient-weather-webcam-uploader-docker:latest
+    container_name: ams-cam-upload
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - SETGID
+      - SETUID
+    environment:
+      # Secrets — pulled from .env / Portainer env panel
+      - "INPUT_IP_ADDRESS=${INPUT_IP}"
+      - "USERNAME=${USERNAME}"
+      - "PASSWORD=${PASSWORD}"
+
+      # FTP target (rarely changes)
+      - "SERVER=ftp2.ambientweather.net"
+      - "PORT=21"
+
+      # Schedule — from .env, default every 2 minutes if unset
+      - "INTERVAL_MINUTES=${INTERVAL_MINUTES:-2}"
+
+      # Timezone — from .env, default UTC
+      - "TZ=${TZ:-UTC}"
+
+      # Status web page (busybox httpd). Container always serves on 8080;
+      # change STATUS_HOST_PORT in .env to publish it elsewhere on the host.
+      - "STATUS_ENABLED=${STATUS_ENABLED:-true}"
+
+    ports:
+      - "${STATUS_HOST_PORT:-8087}:8080"
+
+    volumes:
+      - "./data/archive:/home/root/archive"
+      - "./data/logs:/var/log"
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"

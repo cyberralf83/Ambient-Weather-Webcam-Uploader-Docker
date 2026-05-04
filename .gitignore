@@ -1,5 +1,8 @@
-# Environment files with credentials
+# Environment files with credentials (example.env is the committed template)
 .env
+.env.*
+*.env.local
+!example.env
 
 # Data directories
 data/
