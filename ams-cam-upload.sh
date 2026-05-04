@@ -340,7 +340,7 @@ render_status_page() {
     </div>
     <div class="eyebrow">status</div>
     <h1>Snapshots, on schedule.</h1>
-    <p class="tagline">Webcam to Ambient Weather, every <code>${CRON_SCHEDULE:-cron}</code>.</p>
+    <p class="tagline">Webcam to Ambient Weather, every <code>${INTERVAL_MINUTES:+${INTERVAL_MINUTES} min}${INTERVAL_MINUTES:-${CRON_SCHEDULE:-cron}}</code>.</p>
   </div>
 </header>
 

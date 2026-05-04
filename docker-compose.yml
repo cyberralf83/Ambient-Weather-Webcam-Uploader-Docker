@@ -19,8 +19,11 @@ services:
       - "USERNAME=${USERNAME}"
       - "PASSWORD=${PASSWORD}"
 
-      # Optional settings with defaults
-      - "CRON_SCHEDULE=${CRON_SCHEDULE:-*/2 * * * *}"  # Default: every 2 minutes
+      # Schedule — easy mode wins if set. Either:
+      #   INTERVAL_MINUTES=5     → upload every 5 minutes (range 1-60)
+      #   CRON_SCHEDULE=... *    → full cron expression (advanced)
+      - "INTERVAL_MINUTES=${INTERVAL_MINUTES:-}"
+      - "CRON_SCHEDULE=${CRON_SCHEDULE:-*/2 * * * *}"  # Used only if INTERVAL_MINUTES is empty
       - "MAX_RETRIES=${MAX_RETRIES:-3}"                # Default: 3 retry attempts
       - "RETRY_DELAY=${RETRY_DELAY:-5}"                # Default: 5 seconds between retries
       - "TIMEOUT=${TIMEOUT:-30}"                       # Default: 30 second timeout

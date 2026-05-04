@@ -69,7 +69,8 @@ A robust Docker container that automatically downloads snapshots from your IP we
 |----------|---------|-------------|
 | `SERVER` | `ftp2.ambientweather.net` | FTP server address |
 | `PORT` | `21` | FTP server port |
-| `CRON_SCHEDULE` | `*/2 * * * *` | Cron schedule (every 2 minutes) |
+| `INTERVAL_MINUTES` | _(unset)_ | **Easy mode** — minutes between uploads (1-60). Wins over `CRON_SCHEDULE` if set. |
+| `CRON_SCHEDULE` | `*/2 * * * *` | Advanced — full cron expression (used only when `INTERVAL_MINUTES` is unset) |
 | `MAX_RETRIES` | `3` | Number of retry attempts |
 | `RETRY_DELAY` | `5` | Seconds between retry attempts |
 | `TIMEOUT` | `30` | Download/upload timeout in seconds |
@@ -99,13 +100,25 @@ You can use either setting independently:
 - `IMAGE_QUALITY` only — compresses without resizing
 - Both — resizes first, then compresses
 
-### Cron Schedule Examples
+### Schedule
+
+The simple way — set `INTERVAL_MINUTES` to how many minutes you want between uploads (1-60):
+
+```env
+INTERVAL_MINUTES=5
+```
+
+That's it. For anything more complex (specific times of day, hour-level intervals, weekday-only), use `CRON_SCHEDULE` instead:
 
 - Every 2 minutes (default): `*/2 * * * *`
 - Every 5 minutes: `*/5 * * * *`
 - Every hour: `0 * * * *`
 - Every 30 minutes: `*/30 * * * *`
+- Every 2 hours: `0 */2 * * *`
 - Every day at 8 AM: `0 8 * * *`
+- 6 AM weekdays only: `0 6 * * MON-FRI`
+
+If both are set, `INTERVAL_MINUTES` wins.
 
 ## Building the Image
 
